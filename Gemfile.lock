@@ -2,6 +2,7 @@ GEM
   remote: https://rubygems.org/
   specs:
     diffy (3.1.0)
+    parallel (1.9.0)
     string-similarity (2.0.0)
 
 PLATFORMS
@@ -9,6 +10,7 @@ PLATFORMS
 
 DEPENDENCIES
   diffy
+  parallel
   string-similarity
 
 BUNDLED WITH

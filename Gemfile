@@ -3,3 +3,4 @@ source "https://rubygems.org"
 
 gem "string-similarity", require: "string/similarity"
 gem "diffy"
+gem "parallel"

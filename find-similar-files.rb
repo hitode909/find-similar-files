@@ -17,13 +17,14 @@ class Pair
     content1 = open_and_normalize(path1)
     content2 = open_and_normalize(path2)
     return 0.0 if size_is_too_differ content1, content2
-    @similarity = String::Similarity.cosine content1, content2
+    @similarity = String::Similarity.levenshtein content1, content2
+    warn [@similarity, path1, path2].inspect
     @similarity
   end
 
   def size_is_too_differ content1, content2
-    small, long = [content1, content2].map{|c| c.length }.map{|i| i.to_f }.sort
-    long / small > 1.2 # heuristic!!!
+    # heuristic!!!
+    (content1.length - content2.length).abs > 50
   end
 
   def diff
@@ -41,9 +42,13 @@ class SimilarFilesFinder
   end
 
   def look_files files
-    files.combination(2).map{|path1, path2|
+    pairs = files.combination(2).map{|path1, path2|
       look path1, path2
-    }.compact.sort_by{|pair| -pair.similarity }
+    }.compact
+    Parallel.each_with_index(pairs, in_threads: Parallel.processor_count) {|pair, index|
+      warn ['preparing similarity', index, pairs.length, pair.similarity].inspect
+    }
+    pairs.sort_by{|pair| -pair.similarity }
   end
 
   def look path1, path2
@@ -61,9 +66,10 @@ end
 
 finder = SimilarFilesFinder.new
 pairs = finder.look_files ARGV
-pairs.select{ |pair|
-  pair.similarity > 0.95 # heuristic!!!
-}.each{|pair|
+pairs[0..50].each{|pair|
+#.select{ |pair|
+#  pair.similarity > 0.95 # heuristic!!!
+#}
   if ENV['OUTPUT_DIFF']
     diff = pair.diff
     next if diff.to_s.split(/\n/).length > 40
